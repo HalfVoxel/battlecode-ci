@@ -20,10 +20,12 @@ def main():
     data = json.loads(open("scores.json").read())
     commits = subprocess.check_output(["git", "log", "d067cb2..master", r"--pretty=%H||%an||%s"], cwd=project_dir).decode('utf-8').strip().split('\n')
     items = []
+    totalGames = 0
     for line in commits:
         print(line)
         h, author, msg = line.split("||")
-        if h in data:
+        if h in data and data[h]['tests'] > 0:
+            totalGames += data[h]['tests']
             k = data[h]
             r = Rating(mu=k["mu"], sigma=k["sigma"])
             tests = k["tests"]
@@ -31,7 +33,7 @@ def main():
         else:
             items.append((author + ": " + msg, "?", ""))
 
-    return render_template("main.html", items=items)
+    return render_template("main.html", items=items, totalGames=totalGames//2)
 
 
 if __name__ == "__main__":
