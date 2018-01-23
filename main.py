@@ -112,7 +112,7 @@ def iteration():
     ratingsList = [(key, value) for key, value in ratings.items()]
 
     # Pick rating with highest sigma
-    scores = [(score(x[1]), x) for x in ratingsList]
+    scores = [(score(x[1]), x) for x in ratingsList if x[0] in commits]
     scores.sort(reverse=True)
 
     to_test = scores[0]
