@@ -73,7 +73,7 @@ def test(commitA, commitB, rA, rB):
 def score(x):
     rating = x[0]
     crashes = x[1]
-    return (rating.sigma + rating.mu**2)/(1 + crashes)
+    return (rating.mu + rating.sigma**2)/(1 + crashes)
 
 
 def iteration():
