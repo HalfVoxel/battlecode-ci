@@ -22,7 +22,6 @@ def main():
     items = []
     totalGames = 0
     for line in commits:
-        print(line)
         h, author, msg = line.split("||")
         if h in data and data[h]['tests'] > 0:
             totalGames += data[h]['tests']
