@@ -31,13 +31,15 @@
       // value
       var valueAxis = new AmCharts.ValueAxis();
       valueAxis.stackType = "regular";
+      valueAxis.id = "v1";
       valueAxis.gridAlpha = 0.1;
       valueAxis.axisAlpha = 0;
       chart.addValueAxis(valueAxis);
 
       var graph = new AmCharts.AmGraph();
       graph.valueField = "mu";
-      graph.errorField = "sigma"
+      graph.errorField = "sigma";
+      graph.bulletAxis = "v1";
       graph.type = "column";
       graph.title = "";
       graph.fillAlphas = 0.5;
@@ -45,7 +47,7 @@
       graph.lineColor = "#000000";
       graph.bullet = "yError";
       //graph.negativeLineColor = "#efcc26";
-      graph.hideBulletsCount = 50; // this makes the chart to hide bullets when there are more than 50 series in selection
+      // graph.hideBulletsCount = 50; // this makes the chart to hide bullets when there are more than 50 series in selection
       chart.addGraph(graph);
 
       // var graph = new AmCharts.AmGraph();
