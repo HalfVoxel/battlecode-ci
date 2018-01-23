@@ -102,7 +102,7 @@ def iteration():
     if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir) != 0:
         raise Exception("reset failed")
 
-    commits = [l.split()[0] for l in subprocess.check_output(["git", "log", "d067cb2..master", "--pretty=oneline"], cwd=project_dir).decode('utf-8').strip().split('\n')]
+    commits = [l.split()[0] for l in subprocess.check_output(["git", "log", "d067cb2..master", "--pretty=oneline", "player"], cwd=project_dir).decode('utf-8').strip().split('\n')]
 
     for c in commits:
         if c not in data:
