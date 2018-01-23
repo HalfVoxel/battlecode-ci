@@ -27,7 +27,7 @@ def main():
             k = data[h]
             r = Rating(mu=k["mu"], sigma=k["sigma"])
             tests = k["tests"]
-            items.append((author + ": " + msg, str(round(r.mu, 3)), "Has crashed during compilation" if k["crashes"] > 0 else "Sigma: " + str(round(r.sigma, 3)) + ", " + str(tests) + " tests run"))
+            items.append((author + ": " + msg, str(round(r.mu, 3)), "Has crashed during compilation" if k["crashes"] > 0 else "Sigma: " + str(round(r.sigma, 3)) + ", " + str(tests) + " games played"))
         else:
             items.append((author + ": " + msg, "?", ""))
 

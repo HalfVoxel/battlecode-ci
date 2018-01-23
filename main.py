@@ -112,7 +112,6 @@ def iteration():
     # Pick rating with highest sigma
     scores = [(score(x[1]), x) for x in ratingsList]
     scores.sort(reverse=True)
-    print(scores)
 
     to_test = scores[0]
     opponent = random.choice(scores[1:])
