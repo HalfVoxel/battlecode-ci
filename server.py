@@ -30,11 +30,12 @@ def main():
             r = Rating(mu=k["mu"], sigma=k["sigma"])
             tests = k["tests"]
             items.append((author + ": " + msg, str(round(r.mu, 3)), "Has crashed during compilation" if k["crashes"] > 0 else "Sigma: " + str(round(r.sigma, 3)) + ", " + str(tests) + " games played"))
-            jsData.append({"label": h[0:6], "mu": r.mu, "sigma": r.sigma})
+
+            # Note: chart library shows ±0.5 sigma, so we double it here
+            jsData.append({"label": h[0:6], "mu": r.mu, "sigma": 2*r.sigma})
         else:
             items.append((author + ": " + msg, "?", ""))
 
-    print(jsData)
     return render_template("main.html", items=items, totalGames=totalGames//2, data=json.dumps(list(reversed(jsData))))
 
 
