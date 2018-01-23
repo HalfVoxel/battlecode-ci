@@ -9,13 +9,72 @@
   <link rel="stylesheet" type="text/css" href="static/css/style.css">
   <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,700,300' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="static/amcharts_3.4.5/amcharts/amcharts.js"></script>
+<script src="static/amcharts_3.4.5/amcharts/pie.js"></script>
+<script src="static/amcharts_3.4.5/amcharts/serial.js"></script>
+<script src="static/amcharts_3.4.5/amcharts/xy.js"></script>
 
 </header>
 <body>
+  <script>
+    $(document).ready(() => {
+      var chart = new AmCharts.AmSerialChart();
+      var data = {{ data|safe }};
+      // [{ label: "AAA", mu: 0, sigma: 1}, { label: "AA1", mu: 1, sigma: 1}, { label: "QAB", mu: 1, sigma: 0.1}, { label: "AAA", mu: 1.1, sigma: 0.01}]
+      chart.dataProvider = data;
+      var categoryAxis = chart.categoryAxis;
+      categoryAxis.position = "bottom";
+      categoryAxis.axisColor = "#DADADA";
+      chart.categoryField = "label";
+
+      // value
+      var valueAxis = new AmCharts.ValueAxis();
+      valueAxis.stackType = "regular";
+      valueAxis.gridAlpha = 0.1;
+      valueAxis.axisAlpha = 0;
+      chart.addValueAxis(valueAxis);
+
+      var graph = new AmCharts.AmGraph();
+      graph.valueField = "mu";
+      graph.errorField = "sigma"
+      graph.type = "column";
+      graph.title = "";
+      graph.fillAlphas = 0.5;
+      graph.lineThickness = 1;
+      graph.lineColor = "#000000";
+      graph.bullet = "yError";
+      //graph.negativeLineColor = "#efcc26";
+      graph.hideBulletsCount = 50; // this makes the chart to hide bullets when there are more than 50 series in selection
+      chart.addGraph(graph);
+
+      // var graph = new AmCharts.AmGraph();
+      // graph.categoryField = "label";
+      // graph.valueField = "mu";
+      // graph.errorField = "sigma"
+      // graph.type = "column";
+      // graph.bullet = "yError";
+      // graph.title = "";
+      // graph.fillAlphas = 0.5;
+      // graph.lineThickness = 1;
+      // graph.lineColor = "#000000";
+      // //graph.negativeLineColor = "#efcc26";
+      // graph.hideBulletsCount = 50; // this makes the chart to hide bullets when there are more than 50 series in selection
+      // chart.addGraph(graph);
+
+      chart.write("graph");
+    });
+  </script>
   <div class="container-fluid">
     <div class="row">
       <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
         <h1 class="page-header">Battlecode</h1>
+
+        <div class="row">
+          <div class="col-xs-12">
+            <div id="graph" style="height: 300px;"></div>
+          </div>
+        </div>
 
         <div class="row">
           <div class="col-xs-3">

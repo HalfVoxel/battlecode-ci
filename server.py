@@ -20,6 +20,7 @@ def main():
     data = json.loads(open("scores.json").read())
     commits = subprocess.check_output(["git", "log", "d067cb2..master", r"--pretty=%H||%an||%s", "player"], cwd=project_dir).decode('utf-8').strip().split('\n')
     items = []
+    jsData = []
     totalGames = 0
     for line in commits:
         h, author, msg = line.split("||")
@@ -29,10 +30,12 @@ def main():
             r = Rating(mu=k["mu"], sigma=k["sigma"])
             tests = k["tests"]
             items.append((author + ": " + msg, str(round(r.mu, 3)), "Has crashed during compilation" if k["crashes"] > 0 else "Sigma: " + str(round(r.sigma, 3)) + ", " + str(tests) + " games played"))
+            jsData.append({"label": h[0:6], "mu": r.mu, "sigma": r.sigma})
         else:
             items.append((author + ": " + msg, "?", ""))
 
-    return render_template("main.html", items=items, totalGames=totalGames//2)
+    print(jsData)
+    return render_template("main.html", items=items, totalGames=totalGames//2, data=json.dumps(jsData))
 
 
 if __name__ == "__main__":
