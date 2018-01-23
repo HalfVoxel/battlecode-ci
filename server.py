@@ -18,7 +18,7 @@ project_dir = "battlecode2018"
 @app.route("/")
 def main():
     data = json.loads(open("scores.json").read())
-    commits = subprocess.check_output(["git", "log", "d067cb2..master", r"--pretty=%H||%an||%s"], cwd=project_dir).decode('utf-8').strip().split('\n')
+    commits = subprocess.check_output(["git", "log", "d067cb2..master", r"--pretty=%H||%an||%s", "player"], cwd=project_dir).decode('utf-8').strip().split('\n')
     items = []
     totalGames = 0
     for line in commits:
