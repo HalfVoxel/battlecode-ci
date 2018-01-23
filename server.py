@@ -35,7 +35,7 @@ def main():
             items.append((author + ": " + msg, "?", ""))
 
     print(jsData)
-    return render_template("main.html", items=items, totalGames=totalGames//2, data=json.dumps(jsData))
+    return render_template("main.html", items=items, totalGames=totalGames//2, data=json.dumps(reversed(jsData)))
 
 
 if __name__ == "__main__":
