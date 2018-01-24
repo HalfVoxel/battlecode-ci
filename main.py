@@ -5,6 +5,8 @@ import random
 import os
 import shutil
 import time
+import re
+import datetime
 
 
 project_dir = "battlecode2018"
@@ -19,7 +21,7 @@ def win(winner, loser):
     return ((rWin, winner[1], winner[2] + 1), (rLose, loser[1], loser[2] + 1))
 
 
-def test(commitA, commitB, rA, rB):
+def test(commitA, commitB, rA, rB, history):
     keyA = "rand_" + str(random.randrange(0, 1000000))
     keyB = "rand_" + str(random.randrange(0, 1000000))
 
@@ -28,10 +30,18 @@ def test(commitA, commitB, rA, rB):
     subprocess.call("git checkout " + commitA, shell=True, cwd=project_dir)
     subprocess.call("git checkout master backup run player/common.cpp", shell=True, cwd=project_dir)
 
+    gameTime = datetime.datetime.utcnow().isoformat()
+
     if subprocess.call(["./backup", keyA], cwd=project_dir) != 0:
         print(commitA + " didn't compile")
         rA = crash(rA)
         rB, rA = win(rB, rA)
+        info = {
+            "type": "crash",
+            "hash": commitA,
+            "time": gameTime,
+        }
+        history.append(info)
         return rA, rB
 
     if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir) != 0:
@@ -42,6 +52,13 @@ def test(commitA, commitB, rA, rB):
         print(commitB + " didn't compile")
         rB = crash(rB)
         rA, rB = win(rA, rB)
+
+        info = {
+            "type": "crash",
+            "hash": commitB,
+            "time": gameTime,
+        }
+        history.append(info)
         return rA, rB
 
     print("Starting tournament")
@@ -57,16 +74,43 @@ def test(commitA, commitB, rA, rB):
     output = subprocess.check_output(["./run", "--tournament", "--threads", "2", "-a", keyA, "-b", keyB, "--max-epochs", "1", "--max-maps", "2", "--no-color"], cwd=project_dir).decode('utf-8')
     print(output)
     output = [l for l in output.strip().split('\n') if "won at round" in l]
-    winsForA = sum(1 if "A won at round" in l else 0 for l in output)
-    winsForB = sum(1 if "B won at round" in l else 0 for l in output)
-    assert winsForA + winsForB == len(output), "Victories didn't sum up to the total length?? " + str(winsForA) + " " + str(winsForB) + " " + str(len(output))
+    winsForA = [l for l in output if "A won at round" in l]
+    winsForB = [l for l in output if "B won at round" in l]
+    assert len(winsForA) + len(winsForB) == len(output), "Victories didn't sum up to the total length?? " + str(len(winsForA)) + " " + str(len(winsForB)) + " " + str(len(output))
 
-    print("Wins: " + str(winsForA) + " vs " + str(winsForB))
-    for _ in range(winsForA):
-        rA, rB = win(rA, rB)
+    print("Wins: " + str(len(winsForA)) + " vs " + str(len(winsForB)))
+    winRegex = re.compile(r"(.+?)\s+(\d+|\?)x(\d+|\?)\s+(A vs B|B vs A):\s+(A|B) won at round (\d+)")
 
-    for _ in range(winsForB):
-        rB, rA = win(rB, rA)
+    for line in output:
+        match = winRegex.search(line.split("\r")[-1])
+        assert(match is not None)
+        map = match.group(1)
+        w = match.group(2)
+        h = match.group(3)
+        order = match.group(4)
+        winner = match.group(5)
+        round = int(match.group(6))
+        assert(winner == "A" or winner == "B")
+        assert(order == "A vs B" or order == "B vs A")
+
+        info = {
+            "type": "game",
+            "time": gameTime,
+            "a": commitA,
+            "b": commitB,
+            "winner": winner,
+            "order": order,
+            "round": round,
+            "map": map,
+            "mapWidth": w,
+            "mapHeight": h,
+        }
+        history.append(info)
+
+        if winner == "A":
+            rA, rB = win(rA, rB)
+        else:
+            rB, rA = win(rB, rA)
 
     return rA, rB
 
@@ -84,6 +128,14 @@ def iteration():
         f.close()
     else:
         data = {}
+
+    if os.path.isfile("history.json"):
+        f = open("history.json")
+        history = json.loads(f.read())
+        f.close()
+    else:
+        history = []
+
 
     if subprocess.call("git checkout master", shell=True, cwd=project_dir) != 0:
         raise Exception("master checkout failed")
@@ -135,13 +187,18 @@ def iteration():
     rA = ratings[commitA]
     rB = ratings[commitB]
 
-    rA, rB = test(commitA, commitB, rA, rB)
+    rA, rB = test(commitA, commitB, rA, rB, history)
     ratings[commitA] = rA
     ratings[commitB] = rB
 
     print("Writing new scores")
     output = json.dumps({key: {"mu": x[0].mu, "sigma": x[0].sigma, "crashes": x[1], "tests": x[2]} for (key, x) in ratings.items()}, indent=4)
     f = open("scores.json", "w")
+    f.write(output)
+    f.close()
+
+    output = json.dumps(history, indent=4)
+    f = open("history.json", "w")
     f.write(output)
     f.close()
 
