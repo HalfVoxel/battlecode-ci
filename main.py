@@ -49,9 +49,10 @@ def test(commitA, commitB, rA, rB):
     # Some symlink is destroying things
     subprocess.call("rm bc18-scaffold/battlecode/battlecode", shell=True, cwd=project_dir)
 
-    if not os.path.isdir(project_dir + "/replays"):
+    if os.path.isdir(project_dir + "/replays"):
         shutil.rmtree(project_dir + "/replays")
-        os.mkdir(project_dir + "/replays")
+
+    os.mkdir(project_dir + "/replays")
 
     output = subprocess.check_output(["./run", "--tournament", "--threads", "2", "-a", keyA, "-b", keyB, "--max-epochs", "1", "--max-maps", "2", "--no-color"], cwd=project_dir).decode('utf-8')
     print(output)
