@@ -28,7 +28,9 @@ def test(commitA, commitB, rA, rB, history):
     if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir) != 0:
         raise Exception("reset failed")
     subprocess.call("git checkout " + commitA, shell=True, cwd=project_dir)
-    subprocess.call("git checkout master backup run player/common.cpp", shell=True, cwd=project_dir)
+    subprocess.call("git checkout master backup run player/common.cpp bc18-scaffold", shell=True, cwd=project_dir)
+    if subprocess.call("git submodule update", shell=True, cwd=project_dir) != 0:
+        raise Exception("submodule update")
 
     gameTime = datetime.datetime.utcnow().isoformat()
 
@@ -47,7 +49,10 @@ def test(commitA, commitB, rA, rB, history):
     if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir) != 0:
         raise Exception("reset failed")
     subprocess.call("git checkout " + commitB, shell=True, cwd=project_dir)
-    subprocess.call("git checkout master backup run player/common.cpp", shell=True, cwd=project_dir)
+    subprocess.call("git checkout master backup run player/common.cpp bc18-scaffold", shell=True, cwd=project_dir)
+    if subprocess.call("git submodule update", shell=True, cwd=project_dir) != 0:
+        raise Exception("submodule update")
+
     if subprocess.call(["./backup", keyB], cwd=project_dir) != 0:
         print(commitB + " didn't compile")
         rB = crash(rB)
