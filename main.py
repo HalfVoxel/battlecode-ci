@@ -1,6 +1,7 @@
 from trueskill import Rating, rate_1vs1
 import json
 import subprocess
+from subprocess import DEVNULL
 import random
 import os
 import shutil
@@ -12,31 +13,35 @@ import datetime
 project_dir = "battlecode2018"
 
 
-def crash(bot):
-    return (bot[0], bot[1] + 1, bot[2])
+def compile_crash(bot):
+    return (bot[0], bot[1] + 1, bot[2], bot[3])
+
+
+def runtime_crash(bot):
+    return (bot[0], bot[1] + 1, bot[2] + 1, bot[3])
 
 
 def win(winner, loser):
     rWin, rLose = rate_1vs1(winner[0], loser[0])
-    return ((rWin, winner[1], winner[2] + 1), (rLose, loser[1], loser[2] + 1))
+    return ((rWin, winner[1], winner[2], winner[3] + 1), (rLose, loser[1], loser[2], loser[3] + 1))
 
 
 def test(commitA, commitB, rA, rB, history):
     keyA = "rand_" + str(random.randrange(0, 1000000))
     keyB = "rand_" + str(random.randrange(0, 1000000))
 
-    if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir) != 0:
+    if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("reset failed")
-    subprocess.call("git checkout " + commitA, shell=True, cwd=project_dir)
-    subprocess.call("git checkout master backup run bc18-scaffold", shell=True, cwd=project_dir)
-    if subprocess.call("git submodule update", shell=True, cwd=project_dir) != 0:
+    subprocess.call("git checkout " + commitA, shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL)
+    subprocess.call("git checkout master backup run bc18-scaffold", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL)
+    if subprocess.call("git submodule update", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("submodule update")
 
     gameTime = datetime.datetime.utcnow().isoformat()
 
     if subprocess.call(["./backup", keyA], cwd=project_dir) != 0:
         print(commitA + " didn't compile")
-        rA = crash(rA)
+        rA = compile_crash(rA)
         rB, rA = win(rB, rA)
         info = {
             "type": "crash",
@@ -46,16 +51,16 @@ def test(commitA, commitB, rA, rB, history):
         history.append(info)
         return rA, rB
 
-    if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir) != 0:
+    if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("reset failed")
     subprocess.call("git checkout " + commitB, shell=True, cwd=project_dir)
-    subprocess.call("git checkout master backup run bc18-scaffold", shell=True, cwd=project_dir)
-    if subprocess.call("git submodule update", shell=True, cwd=project_dir) != 0:
+    subprocess.call("git checkout master backup run bc18-scaffold", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL)
+    if subprocess.call("git submodule update", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("submodule update")
 
     if subprocess.call(["./backup", keyB], cwd=project_dir) != 0:
         print(commitB + " didn't compile")
-        rB = crash(rB)
+        rB = compile_crash(rB)
         rA, rB = win(rA, rB)
 
         info = {
@@ -69,14 +74,14 @@ def test(commitA, commitB, rA, rB, history):
     print("Starting tournament")
 
     # Some symlink is destroying things
-    subprocess.call("rm bc18-scaffold/battlecode/battlecode", shell=True, cwd=project_dir)
+    subprocess.call("rm bc18-scaffold/battlecode/battlecode", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL)
 
     if os.path.isdir(project_dir + "/replays"):
         shutil.rmtree(project_dir + "/replays")
 
     os.mkdir(project_dir + "/replays")
 
-    output = subprocess.check_output(["./run", "--tournament", "--threads", "2", "-a", keyA, "-b", keyB, "--max-epochs", "1", "--max-maps", "2", "--no-color"], cwd=project_dir).decode('utf-8')
+    output = subprocess.check_output(["./run", "--tournament", "--threads", "2", "-a", keyA, "-b", keyB, "--max-epochs", "1", "--max-maps", "2", "--no-color", "--save-replays"], cwd=project_dir).decode('utf-8')
     print(output)
     output = [l for l in output.strip().split('\n') if "won at round" in l]
     winsForA = [l for l in output if "A won at round" in l]
@@ -84,7 +89,7 @@ def test(commitA, commitB, rA, rB, history):
     assert len(winsForA) + len(winsForB) == len(output), "Victories didn't sum up to the total length?? " + str(len(winsForA)) + " " + str(len(winsForB)) + " " + str(len(output))
 
     print("Wins: " + str(len(winsForA)) + " vs " + str(len(winsForB)))
-    winRegex = re.compile(r"(.+?)\s+(\d+|\?)x(\d+|\?)\s+(A vs B|B vs A):\s+(A|B) won at round (\d+)")
+    winRegex = re.compile(r"(.+?)\s+(\d+|\?)x(\d+|\?)\s+(A vs B|B vs A):\s+(A|B) won at round (\d+) (?:\(opponent crashed on (earth|mars)\))? replay: (.*)", re.DOTALL)
 
     for line in output:
         match = winRegex.search(line.split("\r")[-1])
@@ -95,8 +100,12 @@ def test(commitA, commitB, rA, rB, history):
         order = match.group(4)
         winner = match.group(5)
         round = int(match.group(6))
+        crashPlanet = match.group(7)
+        replay = match.group(8)
         assert(winner == "A" or winner == "B")
         assert(order == "A vs B" or order == "B vs A")
+        assert(replay is not None)
+        assert(crashPlanet is None or crashPlanet == "earth" or crashPlanet == "mars")
 
         info = {
             "type": "game",
@@ -109,7 +118,11 @@ def test(commitA, commitB, rA, rB, history):
             "map": map,
             "mapWidth": w,
             "mapHeight": h,
+            "crash": crashPlanet is not None,
+            "crashPlanet": crashPlanet,
+            "replay": replay,
         }
+        print(info)
         history.append(info)
 
         if winner == "A":
@@ -141,32 +154,35 @@ def iteration():
     else:
         history = []
 
-
-    if subprocess.call("git checkout master", shell=True, cwd=project_dir) != 0:
+    if subprocess.call("git checkout master", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("master checkout failed")
 
     if subprocess.call("git pull", shell=True, cwd=project_dir) != 0:
         raise Exception("pull failed")
 
-    if subprocess.call("git submodule init", shell=True, cwd=project_dir) != 0:
+    if subprocess.call("git submodule init", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("submodule init")
 
-    if subprocess.call("git submodule sync", shell=True, cwd=project_dir) != 0:
+    if subprocess.call("git submodule sync", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("submodule sync")
 
-    if subprocess.call("git submodule update", shell=True, cwd=project_dir) != 0:
+    if subprocess.call("git submodule update", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("submodule update")
 
-    if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir) != 0:
+    if subprocess.call("git reset --hard HEAD", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("reset failed")
 
     commits = [l.split()[0] for l in subprocess.check_output(["git", "log", "d067cb2..master", "--pretty=oneline", "player"], cwd=project_dir).decode('utf-8').strip().split('\n')]
 
     for c in commits:
         if c not in data:
-            data[c] = {'mu': 25, 'sigma': 8.3333, 'crashes': 0, 'tests': 0}
+            data[c] = {'mu': 25, 'sigma': 8.3333, 'crashes': 0, 'runtime_crashes': 0, 'tests': 0}
 
-    ratings = {key: (Rating(mu=v['mu'], sigma=v['sigma']), v['crashes'], v['tests']) for key, v in data.items()}
+    for key, v in data.items():
+        if 'runtime_crashes' not in v:
+            v['runtime_crashes'] = 0
+
+    ratings = {key: (Rating(mu=v['mu'], sigma=v['sigma']), v['crashes'], v['runtime_crashes'], v['tests']) for key, v in data.items()}
     ratingsList = [(key, value) for key, value in ratings.items() if key in commits]
 
     # Pick rating with highest sigma
@@ -197,7 +213,7 @@ def iteration():
     ratings[commitB] = rB
 
     print("Writing new scores")
-    output = json.dumps({key: {"mu": x[0].mu, "sigma": x[0].sigma, "crashes": x[1], "tests": x[2]} for (key, x) in ratings.items()}, indent=4)
+    output = json.dumps({key: {"mu": x[0].mu, "sigma": x[0].sigma, "crashes": x[1], "runtime_crashes": x[2], "tests": x[3]} for (key, x) in ratings.items()}, indent=4)
     f = open("scores.json", "w")
     f.write(output)
     f.close()
