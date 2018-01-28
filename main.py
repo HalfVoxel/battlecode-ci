@@ -18,7 +18,7 @@ def compile_crash(bot):
 
 
 def runtime_crash(bot):
-    return (bot[0], bot[1] + 1, bot[2] + 1, bot[3])
+    return (bot[0], bot[1], bot[2] + 1, bot[3])
 
 
 def win(winner, loser):
