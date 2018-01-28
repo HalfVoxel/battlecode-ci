@@ -25,7 +25,7 @@ def main():
     totalGames = 0
     for line in commits:
         h, author, msg = line.split("||")
-        commitURL = "/commit/" + h
+        commitURL = "/ci/commit/" + h
         if h in data and data[h]['tests'] > 0:
             totalGames += data[h]['tests']
             k = data[h]
