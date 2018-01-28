@@ -32,7 +32,7 @@ def main():
             r = Rating(mu=k["mu"], sigma=k["sigma"])
             tests = k["tests"]
             runtime_crashes = k['runtime_crashes']
-            message = "Has crashed during compilation" if k["crashes"] > 0 else "Sigma: " + str(round(r.sigma, 3)) + ", " + str(tests) + " games played" + (", " + str(runtime_crashes) if runtime_crashes > 0 else "")
+            message = "Has crashed during compilation" if k["crashes"] > 0 else "Sigma: " + str(round(r.sigma, 3)) + ", " + str(tests) + " games played" + (", " + str(runtime_crashes) + " crashes" if runtime_crashes > 0 else "")
             items.append((author + ": " + msg, commitURL, str(round(r.mu, 3)), message))
 
             # Note: chart library shows ±0.5 sigma, so we double it here
