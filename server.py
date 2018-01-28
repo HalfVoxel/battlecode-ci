@@ -64,8 +64,8 @@ def commitPage(hash):
             b = x['b']
             opponent = b if a == hash else a
             outcome = (x['winner'] == "A") == (hash == a)
-            replayLink = "/replays/" + os.path.relpath(x['replay'] + ".bc18z")
-            logLink = "/replays/" + os.path.relpath(x['replay'] + ".bc18log")
+            replayLink = "/ci/replays/" + os.path.relpath(x['replay'] + ".bc18z")
+            logLink = "/ci/replays/" + os.path.relpath(x['replay'] + ".bc18log")
             items.append((x['time'], opponent[0:6], x['map'] + " " + x['mapWidth'] + "x" + x['mapHeight'], "Win" if outcome else "Loss", replayLink, logLink))
         else:
             # Crash
