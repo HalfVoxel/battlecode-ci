@@ -200,7 +200,8 @@ def iteration():
         deltaScore1 = 0 if i == 0 else (rating.mu - ratingsList[i-1][1][0].mu)**2
         deltaScore2 = 1 if i == len(ratingsList)-1 else (rating.mu - ratingsList[i+1][1][0].mu)**2
         crashes = x[1][1]
-        totalScore = 1 / ((1 + crashes) + (1 + x[1][2]))  # (rating.sigma*rating.sigma + deltaScore1 + deltaScore2)/(1 + crashes)
+        tests = x[1][3]
+        totalScore = 1 / ((1 + crashes) + (1 + tests))  # (rating.sigma*rating.sigma + deltaScore1 + deltaScore2)/(1 + crashes)
         scores.append((random.uniform(0,1) * totalScore, x))
 
     # scores = [(score(x[1]), x) for x in ratingsList]
