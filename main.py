@@ -107,6 +107,12 @@ def test(commitA, commitB, rA, rB, history):
         assert(replay is not None)
         assert(crashPlanet is None or crashPlanet == "earth" or crashPlanet == "mars")
 
+        if crashPlanet is not None:
+            if winner == "A":
+                rB = runtime_crash(rB)
+            else:
+                rA = runtime_crash(rA)
+
         info = {
             "type": "game",
             "time": gameTime,
