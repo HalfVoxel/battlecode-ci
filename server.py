@@ -64,10 +64,15 @@ def commitPage(hash):
             b = x['b']
             opponent = b if a == hash else a
             outcome = (x['winner'] == "A") == (hash == a)
-            replayLink = "http://battlecode.arongranberg.com/?replay=http://battlecode.arongranberg.com/ci/replays/" + os.path.relpath(x['replay'] + ".bc18z")
-            logLink = "/ci/replays/" + os.path.relpath(x['replay'] + ".bc18log")
+            if 'replay' in x:
+                replayLink = "http://battlecode.arongranberg.com/?replay=http://battlecode.arongranberg.com/ci/replays/" + os.path.relpath(x['replay'] + ".bc18z")
+                logLink = "/ci/replays/" + os.path.relpath(x['replay'] + ".bc18log")
+            else:
+                replayLink = ""
+                logLink = ""
+
             outcomeStr = "Win" if outcome else "Loss"
-            if not outcome and x['crash']:
+            if not outcome and 'crash' in x and x['crash']:
                 outcomeStr = "Crash on " + x['crashPlanet']
             items.append((x['time'], opponent[0:6], x['map'] + " " + x['mapWidth'] + "x" + x['mapHeight'], outcomeStr, replayLink, logLink))
         else:
