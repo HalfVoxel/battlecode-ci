@@ -66,7 +66,10 @@ def commitPage(hash):
             outcome = (x['winner'] == "A") == (hash == a)
             replayLink = "http://battlecode.arongranberg.com/?replay=http://battlecode.arongranberg.com/ci/replays/" + os.path.relpath(x['replay'] + ".bc18z")
             logLink = "/ci/replays/" + os.path.relpath(x['replay'] + ".bc18log")
-            items.append((x['time'], opponent[0:6], x['map'] + " " + x['mapWidth'] + "x" + x['mapHeight'], "Win" if outcome else "Loss", replayLink, logLink))
+            outcomeStr = "Win" if outcome else "Loss"
+            if not outcome and x['crash']:
+                outcomeStr = "Crash on " + x['crashPlanet']
+            items.append((x['time'], opponent[0:6], x['map'] + " " + x['mapWidth'] + "x" + x['mapHeight'], outcomeStr, replayLink, logLink))
         else:
             # Crash
             items.append((x['time'], "", "", "Crashed during compilation", "", ""))
