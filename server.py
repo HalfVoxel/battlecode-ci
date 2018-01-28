@@ -59,6 +59,7 @@ def main():
 def commitPage(hash):
     data = json.loads(open("history.json").read())
     data = [x for x in data if (x['type'] == "game" and (x['a'] == hash or x['b'] == hash) or (x['type'] == "crash" and x['hash'] == hash))]
+    data.reverse()
     items = []
     for x in data:
         if x['type'] == "game":
