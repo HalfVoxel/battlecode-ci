@@ -75,8 +75,12 @@ def commitPage(hash):
                 logLink = ""
 
             outcomeStr = "Win" if outcome else "Loss"
-            if not outcome and 'crash' in x and x['crash']:
-                outcomeStr = "Crash on " + x['crashPlanet']
+            if not outcome:
+                if 'crash' in x and x['crash']:
+                    outcomeStr = "Crash on " + x['crashPlanet']
+                elif 'timeout' in x and x['timeout']:
+                    outcomeStr = "Timeout on " + x['crashPlanet']
+
             items.append((x['time'], opponent[0:6], x['map'] + " " + x['mapWidth'] + "x" + x['mapHeight'], outcomeStr, replayLink, logLink))
         else:
             # Crash

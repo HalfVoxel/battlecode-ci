@@ -89,7 +89,7 @@ def test(commitA, commitB, rA, rB, history):
     assert len(winsForA) + len(winsForB) == len(output), "Victories didn't sum up to the total length?? " + str(len(winsForA)) + " " + str(len(winsForB)) + " " + str(len(output))
 
     print("Wins: " + str(len(winsForA)) + " vs " + str(len(winsForB)))
-    winRegex = re.compile(r"(.+?)\s+(\d+|\?)x(\d+|\?)\s+(A vs B|B vs A):\s+(A|B) won at round (\d+) (?:\(opponent crashed on (earth|mars)\))? replay: (.*)", re.DOTALL)
+    winRegex = re.compile(r"(.+?)\s+(\d+|\?)x(\d+|\?)\s+(A vs B|B vs A):\s+(A|B) won at round (\d+) (?:\(opponent (crashed|timed out) on (earth|mars)\))? replay: (.*)", re.DOTALL)
 
     for line in output:
         match = winRegex.search(line.split("\r")[-1])
@@ -100,10 +100,12 @@ def test(commitA, commitB, rA, rB, history):
         order = match.group(4)
         winner = match.group(5)
         round = int(match.group(6))
-        crashPlanet = match.group(7)
-        replay = match.group(8)
+        crashType = match.group(7)
+        crashPlanet = match.group(8)
+        replay = match.group(9)
         assert(winner == "A" or winner == "B")
         assert(order == "A vs B" or order == "B vs A")
+        assert(crashType is None or crashType == "crashed" or crashType == "timed out")
         assert(replay is not None)
         assert(crashPlanet is None or crashPlanet == "earth" or crashPlanet == "mars")
 
@@ -124,7 +126,8 @@ def test(commitA, commitB, rA, rB, history):
             "map": map,
             "mapWidth": w,
             "mapHeight": h,
-            "crash": crashPlanet is not None,
+            "crash": crashType == "crashed",
+            "timeout": crashType == "timed out",
             "crashPlanet": crashPlanet,
             "replay": replay,
         }
