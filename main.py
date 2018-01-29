@@ -166,8 +166,11 @@ def iteration():
     if subprocess.call("git checkout master", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("master checkout failed")
 
-    if subprocess.call("git pull", shell=True, cwd=project_dir) != 0:
-        raise Exception("pull failed")
+    if subprocess.call("git fetch", shell=True, cwd=project_dir) != 0:
+        raise Exception("fetch failed")
+
+    if subprocess.call("git reset --hard origin/master", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
+        raise Exception("reset failed")
 
     if subprocess.call("git submodule init", shell=True, cwd=project_dir, stdout=DEVNULL, stderr=DEVNULL) != 0:
         raise Exception("submodule init")
