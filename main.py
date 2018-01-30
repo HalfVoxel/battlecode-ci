@@ -149,13 +149,6 @@ def score(x):
 
 
 def iteration():
-    if os.path.isfile("scores.json"):
-        f = open("scores.json")
-        data = json.loads(f.read())
-        f.close()
-    else:
-        data = {}
-
     if os.path.isfile("history.json"):
         f = open("history.json")
         history = json.loads(f.read())
@@ -186,13 +179,31 @@ def iteration():
 
     commits = [l.split()[0] for l in subprocess.check_output(["git", "log", "d067cb2..master", "--pretty=oneline", "player"], cwd=project_dir).decode('utf-8').strip().split('\n')]
 
+    # Recreate scores
+    data = {}
     for c in commits:
         if c not in data:
             data[c] = {'mu': 25, 'sigma': 8.3333, 'crashes': 0, 'runtime_crashes': 0, 'tests': 0}
 
-    for key, v in data.items():
-        if 'runtime_crashes' not in v:
-            v['runtime_crashes'] = 0
+    ratings = {key: (Rating(mu=v['mu'], sigma=v['sigma']), v['crashes'], v['runtime_crashes'], v['tests']) for key, v in data.items()}
+
+    for item in history:
+        if item['type'] == "crash":
+            hash = item['hash']
+            if hash in ratings:
+                ratings[hash] = compile_crash(ratings[hash])
+        else:
+            # Game
+            a = item['a']
+            b = item['b']
+            if a in ratings and b in ratings:
+                winner = a if item['winner'] == "A" else b
+                loser = b if item['winner'] == "A" else a
+                ratings[winner], ratings[loser] = win(ratings[winner], ratings[loser])
+
+                if 'crash' in item and item['crash']:
+                    ratings[loser] = runtime_crash(ratings[loser])
+
 
     ratings = {key: (Rating(mu=v['mu'], sigma=v['sigma']), v['crashes'], v['runtime_crashes'], v['tests']) for key, v in data.items()}
     ratingsList = [(key, value) for key, value in ratings.items() if key in commits]
