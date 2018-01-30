@@ -204,8 +204,6 @@ def iteration():
                 if 'crash' in item and item['crash']:
                     ratings[loser] = runtime_crash(ratings[loser])
 
-
-    ratings = {key: (Rating(mu=v['mu'], sigma=v['sigma']), v['crashes'], v['runtime_crashes'], v['tests']) for key, v in data.items()}
     ratingsList = [(key, value) for key, value in ratings.items() if key in commits]
 
     # Pick rating with highest sigma
