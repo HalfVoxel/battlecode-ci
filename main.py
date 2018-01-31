@@ -212,8 +212,8 @@ def iteration():
         x = ratingsList[i]
 
         rating = x[1][0]
-        deltaScore1 = 0 if i == 0 else (rating.mu - ratingsList[i-1][1][0].mu)**2
-        deltaScore2 = 1 if i == len(ratingsList)-1 else (rating.mu - ratingsList[i+1][1][0].mu)**2
+        # deltaScore1 = 0 if i == 0 else (rating.mu - ratingsList[i-1][1][0].mu)**2
+        # deltaScore2 = 1 if i == len(ratingsList)-1 else (rating.mu - ratingsList[i+1][1][0].mu)**2
         crashes = x[1][1]
         tests = x[1][3]
         totalScore = 1 / ((1 + crashes) + (1 + tests))**2  # (rating.sigma*rating.sigma + deltaScore1 + deltaScore2)/(1 + crashes)
@@ -221,14 +221,31 @@ def iteration():
 
     # scores = [(score(x[1]), x) for x in ratingsList]
     scores.sort(reverse=True)
-
     to_test = scores[0]
-    opponent = random.choice(scores[1:])
+
+    if random.uniform(0,1) < 0.2:
+        # Pick a completely random opponent with 20% probability
+        opponent = random.choice(scores[1:])
+    else:
+        scores = []
+        opponent = None
+        for i in range(len(ratingsList)):
+            x = ratingsList[i]
+            if x == to_test[1]:
+                continue
+
+            rating = x[1][0]
+            score = 1/(1 + (rating.mu - to_test[1][1][0].mu)**2)
+            scores.append((random.uniform(0,1) * score, x))
+
+        scores.sort(reverse=True)
+        opponent = scores[0]
 
     commitA = to_test[1][0]
     commitB = opponent[1][0]
     rA = ratings[commitA]
     rB = ratings[commitB]
+    print("Matching " + str(rA[0].mu) + " against " + str(rB[0].mu))
 
     rA, rB = test(commitA, commitB, rA, rB, history)
     ratings[commitA] = rA
