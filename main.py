@@ -258,9 +258,10 @@ def iteration():
     f.close()
 
     output = json.dumps(history, indent=4)
-    f = open("history.json", "w")
+    f = open("history_tmp.json", "w")
     f.write(output)
     f.close()
+    os.rename("history_tmp.json", "history.json")
 
 
 def main():
